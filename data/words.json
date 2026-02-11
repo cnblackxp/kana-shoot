@@ -1,0 +1,232 @@
+[
+  {
+    "id": "1770576798166",
+    "romaji": "shima",
+    "kana": "しま",
+    "image": "/api/images/2dc955fbc19e76a25f1fa5b615fc8fb6.png",
+    "english": "island"
+  },
+  {
+    "id": "1770576809565",
+    "romaji": "yamete",
+    "kana": "やめて",
+    "image": "/api/images/1ee61f3129a1d587cec73a906dbd0da8.png",
+    "english": ""
+  },
+  {
+    "id": "1770576826074",
+    "romaji": "bakemono",
+    "kana": "ばけもの",
+    "image": "/api/images/622f31a591772de8093941d556c1c918.png",
+    "english": "monster"
+  },
+  {
+    "id": "1770578190818",
+    "romaji": "ningen",
+    "kana": "にんげん",
+    "image": "/api/images/697be256b4e669e20262754f74fc77a8.png",
+    "english": "human"
+  },
+  {
+    "id": "1770578650756",
+    "romaji": "sakana",
+    "kana": "さかな",
+    "image": "/api/images/a49b792eb82265ef9ed93df66e017581.png",
+    "english": "fish"
+  },
+  {
+    "id": "1770578704140",
+    "romaji": "tsuyoi",
+    "kana": "つよい",
+    "image": "/api/images/5ef04ae2cdc67ad6305b3705369506a2.png",
+    "english": "strong"
+  },
+  {
+    "id": "1770578751810",
+    "romaji": "neko",
+    "kana": "ねこ",
+    "image": "/api/images/05a61eedc405fcc2087f70c079c82cbd.png",
+    "english": "cat"
+  },
+  {
+    "id": "1770578797666",
+    "romaji": "genki",
+    "kana": "げんき",
+    "image": "/api/images/7f80944e92e04921bd7fa77e0d74ef04.png",
+    "english": "well"
+  },
+  {
+    "id": "1770578835308",
+    "romaji": "sugoi",
+    "kana": "すごい",
+    "image": "/api/images/cdbe6d5c1471d93a9fc29e30c6ff7dc3.png",
+    "english": "awesome, great",
+    "enabled": true
+  },
+  {
+    "id": "1770578871746",
+    "romaji": "oishii",
+    "kana": "おいしい",
+    "image": "/api/images/c1671f502af1ff7fbd1e6bc66a25a364.png",
+    "english": "delicious"
+  },
+  {
+    "id": "1770578908900",
+    "romaji": "uso",
+    "kana": "うそ",
+    "image": "/api/images/d7e21b075b1bff062a00e0a482a2f3b6.png",
+    "english": "lie"
+  },
+  {
+    "id": "1770578939777",
+    "romaji": "kaasan",
+    "kana": "かあさん",
+    "image": "/api/images/9d5a13ab5cc25290555c2189e038d794.png",
+    "english": "mother"
+  },
+  {
+    "id": "1770578969997",
+    "romaji": "kawaii",
+    "kana": "かわいい",
+    "image": "/api/images/41d10f49b2ec8786a2535977b53eb935.png",
+    "english": "cute"
+  },
+  {
+    "id": "1770579005200",
+    "romaji": "kowai",
+    "kana": "こわい",
+    "image": "/api/images/686c5438b97688abc5a543ada6f48fc6.png",
+    "english": "scary"
+  },
+  {
+    "id": "1770579038921",
+    "romaji": "ki",
+    "kana": "き",
+    "image": "/api/images/be0988c39a500d64f421c4b8100692d3.png",
+    "english": "tree"
+  },
+  {
+    "id": "1770579278600",
+    "romaji": "kuso",
+    "kana": "くそ",
+    "image": "/api/images/cc2f951db9452e65d715acf2a7371756.png",
+    "english": "crap, poop, shit",
+    "enabled": true
+  },
+  {
+    "id": "1770755838909",
+    "romaji": "tanoshii",
+    "kana": "たのしい",
+    "image": "",
+    "english": "fun"
+  },
+  {
+    "id": "1770755851493",
+    "romaji": "gomen",
+    "kana": "ごめん",
+    "image": "",
+    "english": "sorry"
+  },
+  {
+    "id": "1770755873962",
+    "romaji": "onna",
+    "kana": "おんな",
+    "image": "",
+    "english": "woman, female",
+    "enabled": true
+  },
+  {
+    "id": "1770755885469",
+    "romaji": "otoko",
+    "kana": "おとこ",
+    "image": "",
+    "english": "man, male",
+    "enabled": true
+  },
+  {
+    "id": "1770755894829",
+    "romaji": "heya",
+    "kana": "へや",
+    "image": "",
+    "english": "room"
+  },
+  {
+    "id": "1770755917036",
+    "romaji": "naruhodo",
+    "kana": "なるほど",
+    "image": "",
+    "english": "i see"
+  },
+  {
+    "id": "1770755932029",
+    "romaji": "doubutsu",
+    "kana": "どうぶつ",
+    "image": "",
+    "english": "animal"
+  },
+  {
+    "id": "1770755945859",
+    "romaji": "watashi",
+    "kana": "わたし",
+    "image": "",
+    "english": "I"
+  },
+  {
+    "id": "1770755957566",
+    "romaji": "tenki",
+    "kana": "てんき",
+    "image": "",
+    "english": "weather"
+  },
+  {
+    "id": "1770755981730",
+    "romaji": "inu",
+    "kana": "いぬ",
+    "image": "",
+    "english": "dog"
+  },
+  {
+    "id": "1770755998615",
+    "romaji": "ima",
+    "kana": "いま",
+    "image": "",
+    "english": "now"
+  },
+  {
+    "id": "1770756012699",
+    "romaji": "koko",
+    "kana": "ここ",
+    "image": "",
+    "english": "here"
+  },
+  {
+    "id": "1770756022149",
+    "romaji": "soko",
+    "kana": "そこ",
+    "image": "",
+    "english": "there"
+  },
+  {
+    "id": "1770756034640",
+    "romaji": "asoko",
+    "kana": "あそこ",
+    "image": "",
+    "english": "over there"
+  },
+  {
+    "id": "1770757864878",
+    "romaji": "hasashiburi",
+    "kana": "はさしぶり",
+    "image": "",
+    "english": "long time no see, it's been a while",
+    "enabled": false
+  },
+  {
+    "id": "1770758093643",
+    "romaji": "sugee",
+    "kana": "すげえ",
+    "image": "",
+    "english": "awesome, great",
+    "enabled": true
+  }
+]

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kana Shoot</title>
+  <link rel="stylesheet" href="/game/style.css">
+</head>
+<body>
+  <a href="/editor" class="nav-link">Editor</a>
+
+  <div id="start-screen">
+    <h1>Kana Shoot</h1>
+    <p class="subtitle">Type romaji, press Enter to fire</p>
+    <div class="options">
+      <label>Mode</label>
+      <select id="opt-mode-type">
+        <option value="single">Single letter</option>
+        <option value="random">Random letter combo</option>
+        <option value="smart">Smart (practice weak)</option>
+        <option value="words">Words (from list)</option>
+        <option value="images">Images</option>
+        <option value="english">English meaning</option>
+        <option value="kana-to-english">Kana to English</option>
+      </select>
+
+      <span id="letter-options">
+        <label>Characters</label>
+        <select id="opt-characters">
+          <option value="hiragana">Hiragana only</option>
+          <option value="katakana">Katakana only</option>
+          <option value="both">Both</option>
+          <option value="custom">Custom</option>
+        </select>
+        <button type="button" id="btn-custom-chars" class="btn-secondary hidden">Select characters…</button>
+        <span id="word-length-wrap" class="hidden">
+          <label>Word length</label>
+          <input type="number" id="opt-word-min" value="2" min="1" max="6" title="Min">
+          <span class="opt-sep">–</span>
+          <input type="number" id="opt-word-max" value="5" min="1" max="6" title="Max">
+        </span>
+      </span>
+
+      <label>Spawn</label>
+      <select id="opt-spawn">
+        <option value="zen">Zen (fixed)</option>
+        <option value="ramping">Ramping</option>
+      </select>
+      <label id="zen-label">Interval (sec)</label>
+      <input type="number" id="opt-interval" value="1" min="0.5" max="3" step="0.5">
+      <label>Fall speed</label>
+      <select id="opt-fallspeed">
+        <option value="0.05">Slowest</option>
+        <option value="0.1">Very slow</option>
+        <option value="0.15">Slower</option>
+        <option value="0.25">Slow</option>
+        <option value="0.45" selected>Medium</option>
+        <option value="0.7">Fast</option>
+      </select>
+      <label>Lives</label>
+      <input type="number" id="opt-lives" value="3" min="1" max="20">
+      <label class="opt-checkbox">
+        <input type="checkbox" id="opt-show-kana-typing">
+        Show kana while typing
+      </label>
+    </div>
+    <button id="btn-start">Start</button>
+    <button type="button" id="btn-stats" class="btn-secondary btn-stats">Stats</button>
+  </div>
+
+  <div id="game-screen" class="hidden">
+    <div class="hud">
+      <span id="score">0</span>
+      <span id="lives-display">3</span>
+      <span id="multiplier">1×</span>
+      <button type="button" id="btn-quit">Quit</button>
+    </div>
+    <div class="game-content">
+      <div id="play-area">
+        <div id="symbols"></div>
+        <div id="projectiles"></div>
+        <div id="particles"></div>
+      </div>
+      <div id="romaji-sidebar" class="romaji-sidebar hidden">
+        <div class="romaji-sidebar-title">This game</div>
+        <div id="romaji-sidebar-list"></div>
+      </div>
+    </div>
+    <div class="input-wrap">
+      <input type="text" id="input" placeholder="type romaji…" autocomplete="off" autofocus>
+      <span class="hint">Enter to fire</span>
+      <div id="kana-preview" class="kana-preview hidden"></div>
+    </div>
+    <div id="game-over" class="hidden">
+      <p>You lost</p>
+      <p class="final-score">Score: <span id="final-score">0</span></p>
+      <button id="btn-again">Play again</button>
+    </div>
+  </div>
+
+  <div id="stats-modal" class="modal hidden">
+    <div class="modal-backdrop stats-modal-backdrop"></div>
+    <div class="modal-box">
+      <h2>Kana stats</h2>
+      <p class="modal-hint">Total correct inputs (all games). Red = under 10 (need practice).</p>
+      <div class="stats-filters">
+        <label>Script</label>
+        <select id="stats-filter-script">
+          <option value="all">All</option>
+          <option value="hiragana">Hiragana only</option>
+          <option value="katakana">Katakana only</option>
+        </select>
+        <label>Sort</label>
+        <select id="stats-sort">
+          <option value="highest">Highest first</option>
+          <option value="lowest">Lowest first</option>
+        </select>
+      </div>
+      <div id="stats-modal-list" class="stats-list"></div>
+      <button type="button" id="stats-modal-close" class="btn-primary">Close</button>
+    </div>
+  </div>
+
+  <div id="custom-modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-box">
+      <h2>Select characters</h2>
+      <p class="modal-hint">Check the characters you want.</p>
+      <div class="modal-actions">
+        <button type="button" id="custom-select-all">Select all</button>
+        <button type="button" id="custom-deselect-all">Deselect all</button>
+      </div>
+      <h3 class="custom-section">Hiragana</h3>
+      <div id="custom-hiragana" class="custom-grid"></div>
+      <h3 class="custom-section">Katakana</h3>
+      <div id="custom-katakana" class="custom-grid"></div>
+      <button type="button" id="custom-done" class="btn-primary">Done</button>
+    </div>
+  </div>
+
+  <script src="/game/script.js"></script>
+</body>
+</html>

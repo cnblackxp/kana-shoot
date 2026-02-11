@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kana Shoot — Editor</title>
+  <link rel="stylesheet" href="/editor/style.css">
+</head>
+<body>
+  <div class="editor">
+    <h1>Content editor</h1>
+    <p class="hint">Add words for the game (Words, Images, English modes). Romaji → pick kana, optional image and English.</p>
+    <a href="/" class="nav-link">Back to game</a>
+
+    <div class="form-section">
+      <h2>Add word</h2>
+      <div class="form-row">
+        <label>Romaji</label>
+        <input type="text" id="romaji" placeholder="e.g. shima">
+        <button type="button" id="btn-lookup">Get kana</button>
+      </div>
+      <div class="form-row" id="kana-row">
+        <label>Kana</label>
+        <select id="kana-options"></select>
+        <input type="text" id="kana-manual" placeholder="or type kana (e.g. しま)">
+      </div>
+      <div class="form-row">
+        <label>English (optional, comma for multiple)</label>
+        <input type="text" id="english" placeholder="e.g. island or woman, female">
+      </div>
+      <div class="form-row">
+        <label class="opt-checkbox">
+          <input type="checkbox" id="word-enabled" checked>
+          Use in game
+        </label>
+      </div>
+      <div class="form-row">
+        <label>Image (optional)</label>
+        <input type="file" id="image-file" accept="image/*">
+        <span class="img-preview" id="image-preview"></span>
+      </div>
+      <div class="form-row">
+        <label>Or paste image</label>
+        <div id="paste-zone" class="paste-zone" tabindex="0">Click here then paste (Ctrl+V) to add an image</div>
+      </div>
+      <input type="hidden" id="image-url" value="">
+      <button type="button" id="btn-save" class="btn-primary">Save word</button>
+      <button type="button" id="btn-cancel-edit" class="btn-secondary hidden">Cancel edit</button>
+    </div>
+
+    <div class="list-section">
+      <h2>Words (<span id="word-count">0</span>)</h2>
+      <input type="text" id="word-search" class="word-search" placeholder="Search romaji, kana, english…">
+      <ul id="word-list"></ul>
+    </div>
+  </div>
+
+  <script src="/editor/script.js"></script>
+</body>
+</html>
