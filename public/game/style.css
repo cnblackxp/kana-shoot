@@ -453,11 +453,33 @@ body {
 
 .modal-actions button:hover { background: #3a3a3a; }
 
+.custom-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+  color: #aaa;
+}
+.custom-filter-actions .filter-group { display: flex; align-items: center; gap: 0.25rem; }
+.custom-filter-actions button {
+  background: #3a3a3a;
+  color: #ccc;
+  border: 1px solid #555;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.custom-filter-actions button:hover { background: #444; color: #fff; }
+
+#custom-modal .modal-box { max-width: 560px; }
+
 .custom-section { margin: 0.5rem 0 0.35rem 0; font-size: 0.95rem; color: #aaa; }
 
 .custom-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  grid-template-columns: repeat(5, 1fr);
   gap: 0.35rem 0.75rem;
   margin-bottom: 1rem;
 }

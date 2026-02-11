@@ -182,8 +182,9 @@
     "id": "1770755981730",
     "romaji": "inu",
     "kana": "いぬ",
-    "image": "",
-    "english": "dog"
+    "image": "/api/images/cb5b98a105fae28fef462eaa305fe14d.png",
+    "english": "dog",
+    "enabled": true
   },
   {
     "id": "1770755998615",
@@ -227,6 +228,14 @@
     "kana": "すげえ",
     "image": "",
     "english": "awesome, great",
+    "enabled": true
+  },
+  {
+    "id": "1770843261432",
+    "romaji": "samui",
+    "kana": "さむい",
+    "image": "/api/images/79b01fc63fa2424b7d110393b66bfff1.png",
+    "english": "cold",
     "enabled": true
   }
 ]

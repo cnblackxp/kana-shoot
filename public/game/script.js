@@ -36,6 +36,9 @@
     'パ': 'pa', 'ピ': 'pi', 'プ': 'pu', 'ペ': 'pe', 'ポ': 'po'
   };
 
+  var DAKUTEN = { 'が': 1, 'ぎ': 1, 'ぐ': 1, 'げ': 1, 'ご': 1, 'ざ': 1, 'じ': 1, 'ず': 1, 'ぜ': 1, 'ぞ': 1, 'だ': 1, 'ぢ': 1, 'づ': 1, 'で': 1, 'ど': 1, 'ば': 1, 'び': 1, 'ぶ': 1, 'べ': 1, 'ぼ': 1, 'ガ': 1, 'ギ': 1, 'グ': 1, 'ゲ': 1, 'ゴ': 1, 'ザ': 1, 'ジ': 1, 'ズ': 1, 'ゼ': 1, 'ゾ': 1, 'ダ': 1, 'ヂ': 1, 'ヅ': 1, 'デ': 1, 'ド': 1, 'バ': 1, 'ビ': 1, 'ブ': 1, 'ベ': 1, 'ボ': 1 };
+  var HANDAKUTEN = { 'ぱ': 1, 'ぴ': 1, 'ぷ': 1, 'ぺ': 1, 'ぽ': 1, 'パ': 1, 'ピ': 1, 'プ': 1, 'ペ': 1, 'ポ': 1 };
+
   var ROMAJI_TO_KANA = {};
   var TWO_CHAR_ROMAJI = [];
   (function () {
@@ -95,6 +98,8 @@
         lives: document.getElementById('opt-lives').value,
         showKanaTyping: document.getElementById('opt-show-kana-typing').checked
       };
+      var smartScript = document.getElementById('opt-smart-script');
+      if (smartScript) o.smartScript = smartScript.value;
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(o));
     } catch (e) {}
   }
@@ -121,6 +126,8 @@
       document.getElementById('opt-lives').value = o.lives != null ? Math.max(1, Math.min(20, parseInt(o.lives, 10) || 3)) : 3;
       var kanaTypingCb = document.getElementById('opt-show-kana-typing');
       if (kanaTypingCb && o.showKanaTyping != null) kanaTypingCb.checked = !!o.showKanaTyping;
+      var smartScriptEl = document.getElementById('opt-smart-script');
+      if (smartScriptEl && o.smartScript && [].slice.call(smartScriptEl.options).some(function (opt) { return opt.value === o.smartScript; })) smartScriptEl.value = o.smartScript;
       var btn = document.getElementById('btn-custom-chars');
       if (sel.value === 'custom') btn.classList.remove('hidden');
       document.getElementById('zen-label').style.visibility = spawnSel.value === 'zen' ? 'visible' : 'hidden';
@@ -133,6 +140,10 @@
     letterOpts.classList.toggle('hidden', mode === 'words' || mode === 'images' || mode === 'english' || mode === 'kana-to-english');
     var wrap = document.getElementById('word-length-wrap');
     wrap.classList.toggle('hidden', mode !== 'random' && mode !== 'smart');
+    var charSetWrap = document.getElementById('character-set-wrap');
+    var smartWrap = document.getElementById('smart-chars-wrap');
+    if (charSetWrap) charSetWrap.classList.toggle('hidden', mode === 'smart');
+    if (smartWrap) smartWrap.classList.toggle('hidden', mode !== 'smart');
   }
 
   function saveCustomChars() {
@@ -218,6 +229,18 @@
     return displayChar ? { displayChar: displayChar, romaji: romaji } : null;
   }
 
+  function buildPoolFromStats(scriptFilter) {
+    var stored = getStoredStats();
+    var pool = [];
+    Object.keys(stored).forEach(function (kana) {
+      if (scriptFilter === 'hiragana' && !HIRAGANA[kana]) return;
+      if (scriptFilter === 'katakana' && !KATAKANA[kana]) return;
+      var romaji = getRomajiForKana(kana);
+      if (romaji) pool.push({ char: kana, romaji: romaji });
+    });
+    return pool;
+  }
+
   function buildCustomModal() {
     var hEl = document.getElementById('custom-hiragana');
     var kEl = document.getElementById('custom-katakana');
@@ -229,6 +252,8 @@
       cb.type = 'checkbox';
       cb.dataset.char = k;
       cb.dataset.romaji = HIRAGANA[k];
+      if (DAKUTEN[k]) cb.dataset.dakuten = '1';
+      if (HANDAKUTEN[k]) cb.dataset.handakuten = '1';
       var span = document.createElement('span');
       span.className = 'custom-char';
       span.textContent = k;
@@ -243,6 +268,8 @@
       cb.type = 'checkbox';
       cb.dataset.char = k;
       cb.dataset.romaji = KATAKANA[k];
+      if (DAKUTEN[k]) cb.dataset.dakuten = '1';
+      if (HANDAKUTEN[k]) cb.dataset.handakuten = '1';
       var span = document.createElement('span');
       span.className = 'custom-char';
       span.textContent = k;
@@ -635,7 +662,7 @@
   function startGame() {
     gameMode = document.getElementById('opt-mode-type').value;
 
-    if (gameMode === 'single' || gameMode === 'random' || gameMode === 'smart') {
+    if (gameMode === 'single' || gameMode === 'random') {
       var chars = document.getElementById('opt-characters').value;
       if (chars === 'custom') {
         customPool = getCustomSelected();
@@ -651,6 +678,19 @@
       wordMax = Math.max(1, Math.min(6, parseInt(wMaxIn.value, 10) || 5));
       if (wordMin > wordMax) wordMax = wordMin;
       pool = buildPool(chars);
+    } else if (gameMode === 'smart') {
+      var wMinIn = document.getElementById('opt-word-min');
+      var wMaxIn = document.getElementById('opt-word-max');
+      wordMin = Math.max(1, Math.min(6, parseInt(wMinIn.value, 10) || 2));
+      wordMax = Math.max(1, Math.min(6, parseInt(wMaxIn.value, 10) || 5));
+      if (wordMin > wordMax) wordMax = wordMin;
+      var smartScript = document.getElementById('opt-smart-script');
+      var scriptVal = smartScript ? smartScript.value : 'both';
+      pool = buildPoolFromStats(scriptVal);
+      if (pool.length === 0) {
+        alert('No stats yet for this script. Play other modes first to build character stats, or try Both.');
+        return;
+      }
     } else {
       if (cmsWords.length === 0) {
         alert('No words in the list for this mode. Add entries with kana and English in the Editor (/editor).');
@@ -802,6 +842,42 @@
     document.getElementById('stats-filter-script').addEventListener('change', renderStatsModalList);
     document.getElementById('stats-sort').addEventListener('change', renderStatsModalList);
 
+    document.getElementById('btn-smart-chars').addEventListener('click', function () {
+      var modal = document.getElementById('smart-info-modal');
+      var listEl = document.getElementById('smart-info-list');
+      if (!modal || !listEl) return;
+      var smartScript = document.getElementById('opt-smart-script');
+      var scriptVal = smartScript ? smartScript.value : 'both';
+      var stored = getStoredStats();
+      var entries = Object.keys(stored).map(function (k) {
+        return { key: k, count: stored[k] };
+      }).filter(function (e) {
+        if (!getRomajiForKana(e.key)) return false;
+        if (scriptVal === 'hiragana' && !HIRAGANA[e.key]) return false;
+        if (scriptVal === 'katakana' && !KATAKANA[e.key]) return false;
+        return true;
+      });
+      entries.sort(function (a, b) { return a.count - b.count; });
+      listEl.innerHTML = '';
+      if (entries.length === 0) {
+        listEl.innerHTML = '<p class="modal-hint">No stats yet. Play other modes to build character stats; Smart mode will then use those characters.</p>';
+      } else {
+        entries.forEach(function (e) {
+          var row = document.createElement('div');
+          row.className = 'romaji-sidebar-row' + (e.count < 10 ? ' stat-need-practice' : '');
+          row.innerHTML = '<span class="romaji-kana">' + statDisplayLabel(e.key) + '</span> <span class="romaji-count">' + e.count + '</span>';
+          listEl.appendChild(row);
+        });
+      }
+      modal.classList.remove('hidden');
+    });
+    document.getElementById('smart-info-close').addEventListener('click', function () {
+      document.getElementById('smart-info-modal').classList.add('hidden');
+    });
+    document.querySelector('.smart-info-backdrop').addEventListener('click', function () {
+      document.getElementById('smart-info-modal').classList.add('hidden');
+    });
+
     document.getElementById('stats-modal-close').addEventListener('click', function () {
       document.getElementById('stats-modal').classList.add('hidden');
     });
@@ -832,6 +908,30 @@
     });
     document.getElementById('custom-deselect-all').addEventListener('click', function () {
       document.querySelectorAll('#custom-modal input[type="checkbox"]').forEach(function (cb) { cb.checked = false; });
+    });
+    document.getElementById('custom-select-hiragana').addEventListener('click', function () {
+      document.querySelectorAll('#custom-hiragana input[type="checkbox"]').forEach(function (cb) { cb.checked = true; });
+    });
+    document.getElementById('custom-deselect-hiragana').addEventListener('click', function () {
+      document.querySelectorAll('#custom-hiragana input[type="checkbox"]').forEach(function (cb) { cb.checked = false; });
+    });
+    document.getElementById('custom-select-katakana').addEventListener('click', function () {
+      document.querySelectorAll('#custom-katakana input[type="checkbox"]').forEach(function (cb) { cb.checked = true; });
+    });
+    document.getElementById('custom-deselect-katakana').addEventListener('click', function () {
+      document.querySelectorAll('#custom-katakana input[type="checkbox"]').forEach(function (cb) { cb.checked = false; });
+    });
+    document.getElementById('custom-select-dakuten').addEventListener('click', function () {
+      document.querySelectorAll('#custom-modal input[type="checkbox"][data-dakuten="1"]').forEach(function (cb) { cb.checked = true; });
+    });
+    document.getElementById('custom-deselect-dakuten').addEventListener('click', function () {
+      document.querySelectorAll('#custom-modal input[type="checkbox"][data-dakuten="1"]').forEach(function (cb) { cb.checked = false; });
+    });
+    document.getElementById('custom-select-handakuten').addEventListener('click', function () {
+      document.querySelectorAll('#custom-modal input[type="checkbox"][data-handakuten="1"]').forEach(function (cb) { cb.checked = true; });
+    });
+    document.getElementById('custom-deselect-handakuten').addEventListener('click', function () {
+      document.querySelectorAll('#custom-modal input[type="checkbox"][data-handakuten="1"]').forEach(function (cb) { cb.checked = false; });
     });
     document.getElementById('opt-spawn').addEventListener('change', function () {
       document.getElementById('zen-label').style.visibility = this.value === 'zen' ? 'visible' : 'hidden';

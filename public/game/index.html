@@ -25,14 +25,25 @@
       </select>
 
       <span id="letter-options">
-        <label>Characters</label>
-        <select id="opt-characters">
-          <option value="hiragana">Hiragana only</option>
-          <option value="katakana">Katakana only</option>
-          <option value="both">Both</option>
-          <option value="custom">Custom</option>
-        </select>
-        <button type="button" id="btn-custom-chars" class="btn-secondary hidden">Select characters…</button>
+        <span id="character-set-wrap">
+          <label>Characters</label>
+          <select id="opt-characters">
+            <option value="hiragana">Hiragana only</option>
+            <option value="katakana">Katakana only</option>
+            <option value="both">Both</option>
+            <option value="custom">Custom</option>
+          </select>
+          <button type="button" id="btn-custom-chars" class="btn-secondary hidden">Select characters…</button>
+        </span>
+        <span id="smart-chars-wrap" class="hidden">
+          <label>Script</label>
+          <select id="opt-smart-script">
+            <option value="hiragana">Hiragana only</option>
+            <option value="katakana">Katakana only</option>
+            <option value="both">Both</option>
+          </select>
+          <button type="button" id="btn-smart-chars" class="btn-secondary">View characters</button>
+        </span>
         <span id="word-length-wrap" class="hidden">
           <label>Word length</label>
           <input type="number" id="opt-word-min" value="2" min="1" max="6" title="Min">
@@ -98,6 +109,16 @@
     </div>
   </div>
 
+  <div id="smart-info-modal" class="modal hidden">
+    <div class="modal-backdrop smart-info-backdrop"></div>
+    <div class="modal-box">
+      <h2>Smart mode characters</h2>
+      <p class="modal-hint">Smart mode uses <strong>only characters from your stats</strong> (kana you’ve correctly typed in other modes), filtered by the Script you chose (Hiragana / Katakana / Both). It picks characters with <strong>low counts more often</strong> so you practice weak ones. Red = under 10 (need practice). List below is sorted lowest first and matches the current Script.</p>
+      <div id="smart-info-list" class="stats-list"></div>
+      <button type="button" id="smart-info-close" class="btn-primary">Close</button>
+    </div>
+  </div>
+
   <div id="stats-modal" class="modal hidden">
     <div class="modal-backdrop stats-modal-backdrop"></div>
     <div class="modal-box">
@@ -129,6 +150,12 @@
       <div class="modal-actions">
         <button type="button" id="custom-select-all">Select all</button>
         <button type="button" id="custom-deselect-all">Deselect all</button>
+      </div>
+      <div class="custom-filter-actions">
+        <span class="filter-group">Hiragana: <button type="button" id="custom-select-hiragana">Select</button> <button type="button" id="custom-deselect-hiragana">Deselect</button></span>
+        <span class="filter-group">Katakana: <button type="button" id="custom-select-katakana">Select</button> <button type="button" id="custom-deselect-katakana">Deselect</button></span>
+        <span class="filter-group">Ten-ten: <button type="button" id="custom-select-dakuten">Select</button> <button type="button" id="custom-deselect-dakuten">Deselect</button></span>
+        <span class="filter-group">Handakuten: <button type="button" id="custom-select-handakuten">Select</button> <button type="button" id="custom-deselect-handakuten">Deselect</button></span>
       </div>
       <h3 class="custom-section">Hiragana</h3>
       <div id="custom-hiragana" class="custom-grid"></div>
