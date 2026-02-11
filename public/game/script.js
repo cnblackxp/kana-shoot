@@ -81,6 +81,7 @@
   var wordMax = 5;
   var SETTINGS_KEY = 'kanaShoot_settings';
   var CUSTOM_KEY = 'kanaShoot_customChars';
+  var PROFILES_KEY = 'kanaShoot_characterProfiles';
   var STATS_KEY = 'kanaShoot_romajiStats';
   var kanaPreviewTimer = null;
   var sessionStats = {};
@@ -157,6 +158,54 @@
       var arr = JSON.parse(raw);
       if (Array.isArray(arr) && arr.length > 0) customPool = arr;
     } catch (e) {}
+  }
+
+  function getProfiles() {
+    try {
+      var raw = localStorage.getItem(PROFILES_KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+  }
+
+  function saveProfiles(profiles) {
+    try { localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles)); } catch (e) {}
+  }
+
+  function getNextDefaultName() {
+    var profiles = getProfiles();
+    var n = 1;
+    for (var i = 0; i < profiles.length; i++) {
+      var m = /^Set (\d+)$/i.exec(profiles[i].name);
+      if (m) n = Math.max(n, parseInt(m[1], 10) + 1);
+    }
+    return 'Set ' + n;
+  }
+
+  function refreshProfileDropdown() {
+    var sel = document.getElementById('custom-profile-list');
+    if (!sel) return;
+    var selected = sel.value;
+    sel.innerHTML = '';
+    var opt0 = document.createElement('option');
+    opt0.value = '';
+    opt0.textContent = '— Select profile —';
+    sel.appendChild(opt0);
+    getProfiles().forEach(function (p) {
+      var opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name;
+      sel.appendChild(opt);
+    });
+    if (selected) sel.value = selected;
+  }
+
+  function applyProfileToModal(chars) {
+    var checkboxes = document.querySelectorAll('#custom-modal input[type="checkbox"]');
+    checkboxes.forEach(function (cb) {
+      cb.checked = chars.some(function (p) { return p.char === cb.dataset.char && p.romaji === cb.dataset.romaji; });
+    });
   }
 
   function applyCustomPoolToModal() {
@@ -893,6 +942,7 @@
     });
     document.getElementById('btn-custom-chars').addEventListener('click', function () {
       applyCustomPoolToModal();
+      refreshProfileDropdown();
       document.getElementById('custom-modal').classList.remove('hidden');
     });
     document.getElementById('custom-done').addEventListener('click', function () {
@@ -932,6 +982,47 @@
     });
     document.getElementById('custom-deselect-handakuten').addEventListener('click', function () {
       document.querySelectorAll('#custom-modal input[type="checkbox"][data-handakuten="1"]').forEach(function (cb) { cb.checked = false; });
+    });
+    document.getElementById('custom-profile-load').addEventListener('click', function () {
+      var sel = document.getElementById('custom-profile-list');
+      var id = sel && sel.value;
+      if (!id) return;
+      var profiles = getProfiles();
+      var p = profiles.filter(function (x) { return x.id === id; })[0];
+      if (p && p.chars) applyProfileToModal(p.chars);
+    });
+    document.getElementById('custom-profile-save').addEventListener('click', function () {
+      var chars = getCustomSelected();
+      if (chars.length === 0) return;
+      var profiles = getProfiles();
+      var name = getNextDefaultName();
+      var id = 'p' + Date.now();
+      profiles.push({ id: id, name: name, chars: chars });
+      saveProfiles(profiles);
+      refreshProfileDropdown();
+      document.getElementById('custom-profile-list').value = id;
+    });
+    document.getElementById('custom-profile-rename').addEventListener('click', function () {
+      var sel = document.getElementById('custom-profile-list');
+      var id = sel && sel.value;
+      if (!id) return;
+      var profiles = getProfiles();
+      var p = profiles.filter(function (x) { return x.id === id; })[0];
+      if (!p) return;
+      var newName = window.prompt('Profile name:', p.name);
+      if (newName == null || String(newName).trim() === '') return;
+      p.name = String(newName).trim();
+      saveProfiles(profiles);
+      refreshProfileDropdown();
+      sel.value = id;
+    });
+    document.getElementById('custom-profile-delete').addEventListener('click', function () {
+      var sel = document.getElementById('custom-profile-list');
+      var id = sel && sel.value;
+      if (!id) return;
+      var profiles = getProfiles().filter(function (x) { return x.id !== id; });
+      saveProfiles(profiles);
+      refreshProfileDropdown();
     });
     document.getElementById('opt-spawn').addEventListener('change', function () {
       document.getElementById('zen-label').style.visibility = this.value === 'zen' ? 'visible' : 'hidden';

@@ -146,7 +146,17 @@
     <div class="modal-backdrop"></div>
     <div class="modal-box">
       <h2>Select characters</h2>
-      <p class="modal-hint">Check the characters you want.</p>
+      <p class="modal-hint">Check the characters you want. Save as a profile to reuse later.</p>
+      <div class="custom-profile-row">
+        <label for="custom-profile-list">Profile</label>
+        <select id="custom-profile-list">
+          <option value="">— Select profile —</option>
+        </select>
+        <button type="button" id="custom-profile-load" class="btn-profile">Load</button>
+        <button type="button" id="custom-profile-save" class="btn-profile">Save as new</button>
+        <button type="button" id="custom-profile-rename" class="btn-profile">Rename</button>
+        <button type="button" id="custom-profile-delete" class="btn-profile">Delete</button>
+      </div>
       <div class="modal-actions">
         <button type="button" id="custom-select-all">Select all</button>
         <button type="button" id="custom-deselect-all">Deselect all</button>
