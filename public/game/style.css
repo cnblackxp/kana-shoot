@@ -231,6 +231,39 @@ body {
 .stats-list .romaji-sidebar-row.stat-need-practice .romaji-kana,
 .stats-list .romaji-sidebar-row.stat-need-practice .romaji-count { color: #f88; }
 
+.data-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
+
+.sessions-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+.sessions-list .session-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 0.5rem 1rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #333;
+  align-items: center;
+}
+.sessions-list .session-row .session-date { color: #888; white-space: nowrap; }
+.sessions-list .session-row .session-mode { color: #ccc; }
+.sessions-list .session-row .session-score { color: #8cf; font-weight: 600; }
+
+#sessions-modal .modal-box { max-width: 520px; }
+
+.export-options, .import-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin: 0.75rem 0;
+}
+.export-options label, .import-options label { margin: 0; }
+#import-file { margin: 0.5rem 0; display: block; }
+.import-options.hidden { display: none !important; }
+#import-do.hidden, #export-modal .btn-secondary, #import-modal .btn-secondary { margin-left: 0.5rem; }
+
 #symbols, #projectiles, #particles {
   position: absolute;
   inset: 0;

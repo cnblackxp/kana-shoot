@@ -9,27 +9,21 @@
   }
 
   function loadWords() {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', '/api/words');
-    xhr.onload = function () {
-      try {
-        words = JSON.parse(xhr.responseText);
-      } catch (e) {
-        words = [];
-      }
+    if (!window.KanaDB) { words = []; renderList(); return; }
+    window.KanaDB.words.getAll().then(function (list) {
+      words = list || [];
       renderList();
-    };
-    xhr.onerror = function () { words = []; renderList(); };
-    xhr.send();
+    }).catch(function () { words = []; renderList(); });
   }
 
   function getSearchFilter() {
-    var q = (getEl('word-search').value || '').trim().toLowerCase();
-    return q;
+    var el = getEl('word-search');
+    return el ? (el.value || '').trim().toLowerCase() : '';
   }
 
   function renderList() {
     var ul = getEl('word-list');
+    if (!ul) return;
     ul.innerHTML = '';
     var q = getSearchFilter();
     var list = q
@@ -40,7 +34,8 @@
           return r.indexOf(q) !== -1 || k.indexOf(q) !== -1 || e.indexOf(q) !== -1;
         })
       : words;
-    getEl('word-count').textContent = q ? list.length + ' / ' + words.length : list.length;
+    var countEl = getEl('word-count');
+    if (countEl) countEl.textContent = q ? list.length + ' / ' + words.length : list.length;
     list.forEach(function (w) {
       var li = document.createElement('li');
       var enabledCb = document.createElement('input');
@@ -90,15 +85,15 @@
     ul.querySelectorAll('.word-enabled-cb').forEach(function (cb) {
       cb.addEventListener('change', function () {
         var id = cb.dataset.id;
-        var xhr = new XMLHttpRequest();
-        xhr.open('PUT', '/api/words/' + id);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.onload = function () {
+        if (!window.KanaDB) return;
+        window.KanaDB.words.get(id).then(function (w) {
+          if (!w) return;
+          w.enabled = cb.checked;
+          return window.KanaDB.words.put(w);
+        }).then(function () {
           var w = words.find(function (x) { return x.id === id; });
           if (w) w.enabled = cb.checked;
-        };
-        xhr.onerror = function () { cb.checked = !cb.checked; };
-        xhr.send(JSON.stringify({ enabled: cb.checked }));
+        }).catch(function () { cb.checked = !cb.checked; });
       });
     });
     ul.querySelectorAll('.edit-btn').forEach(function (btn) {
@@ -109,219 +104,126 @@
     });
   }
 
-  function escapeHtml(s) {
-    if (!s) return '';
-    var div = document.createElement('div');
-    div.textContent = s;
-    return div.innerHTML;
-  }
-
   function lookupKana() {
-    var romaji = getEl('romaji').value.trim().toLowerCase();
+    var romaji = getEl('romaji') && getEl('romaji').value.trim().toLowerCase();
     if (!romaji) return;
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', '/api/romaji-to-kana?q=' + encodeURIComponent(romaji));
-    xhr.onload = function () {
-      try {
-        var options = JSON.parse(xhr.responseText);
-        var sel = getEl('kana-options');
-        sel.innerHTML = '';
-        if (options.length > 0) {
-          options.forEach(function (k) {
-            var opt = document.createElement('option');
-            opt.value = k;
-            opt.textContent = k;
-            sel.appendChild(opt);
-          });
-          getEl('kana-manual').value = options[0];
-        } else {
-          getEl('kana-manual').value = '';
-        }
-      } catch (e) {
-        getEl('kana-manual').value = '';
-      }
-    };
-    xhr.onerror = function () { getEl('kana-manual').value = ''; };
-    xhr.send();
-  }
-
-  function uploadImage(file, cb) {
-    if (!file) { if (cb) cb(''); return; }
-    var form = new FormData();
-    form.append('image', file);
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/images');
-    xhr.onload = function () {
-      try {
-        var data = JSON.parse(xhr.responseText);
-        if (cb) cb(data.url || '');
-      } catch (e) {
-        if (cb) cb('');
-      }
-    };
-    xhr.onerror = function () { if (cb) cb(''); };
-    xhr.send(form);
+    var kana = (typeof window.romajiToHiragana === 'function') ? window.romajiToHiragana(romaji) : '';
+    var sel = getEl('kana-options');
+    if (!sel) return;
+    sel.innerHTML = '';
+    if (kana) {
+      var opt = document.createElement('option');
+      opt.value = kana;
+      opt.textContent = kana;
+      sel.appendChild(opt);
+      if (getEl('kana-manual')) getEl('kana-manual').value = kana;
+    } else {
+      if (getEl('kana-manual')) getEl('kana-manual').value = '';
+    }
   }
 
   function saveWord() {
-    var romaji = getEl('romaji').value.trim();
+    var romaji = getEl('romaji') && getEl('romaji').value.trim();
     var kanaSel = getEl('kana-options');
-    var kanaManual = getEl('kana-manual').value.trim();
-    var kana = kanaManual || (kanaSel.options[kanaSel.selectedIndex] && kanaSel.options[kanaSel.selectedIndex].value) || '';
-    var english = getEl('english').value.trim();
-    var imageUrl = getEl('image-url').value.trim();
+    var kanaManual = getEl('kana-manual') && getEl('kana-manual').value.trim();
+    var kana = kanaManual || (kanaSel && kanaSel.options[kanaSel.selectedIndex] && kanaSel.options[kanaSel.selectedIndex].value) || '';
+    var english = getEl('english') ? getEl('english').value.trim() : '';
+    var imageUrl = getEl('image-url') ? getEl('image-url').value.trim() : '';
 
     if (!romaji || !kana) {
       alert('Romaji and kana are required.');
       return;
     }
 
-    var enabled = getEl('word-enabled').checked;
-    var payload = { romaji: romaji, kana: kana, english: english, image: imageUrl, enabled: enabled };
+    if (!window.KanaDB) { alert('Storage not ready.'); return; }
 
-    if (editingId) {
-      var xhr = new XMLHttpRequest();
-      xhr.open('PUT', '/api/words/' + editingId);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.onload = function () {
-        cancelEdit();
-        loadWords();
-        clearForm();
-      };
-      xhr.onerror = function () { alert('Failed to update.'); };
-      xhr.send(JSON.stringify(payload));
-    } else {
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', '/api/words');
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.onload = function () {
-        loadWords();
-        clearForm();
-      };
-      xhr.onerror = function () { alert('Failed to save.'); };
-      xhr.send(JSON.stringify(payload));
-    }
+    var payload = {
+      id: editingId || String(Date.now()),
+      romaji: romaji,
+      kana: kana,
+      english: english,
+      image: imageUrl,
+      enabled: getEl('word-enabled') ? getEl('word-enabled').checked : true
+    };
+
+    window.KanaDB.words.put(payload).then(function () {
+      cancelEdit();
+      loadWords();
+      clearForm();
+    }).catch(function () { alert('Failed to save.'); });
   }
 
   function clearForm() {
-    getEl('romaji').value = '';
-    getEl('kana-options').innerHTML = '';
-    getEl('kana-manual').value = '';
-    getEl('english').value = '';
-    getEl('image-url').value = '';
-    getEl('image-file').value = '';
-    getEl('image-preview').innerHTML = '';
-    getEl('word-enabled').checked = true;
+    if (getEl('romaji')) getEl('romaji').value = '';
+    if (getEl('kana-options')) getEl('kana-options').innerHTML = '';
+    if (getEl('kana-manual')) getEl('kana-manual').value = '';
+    if (getEl('english')) getEl('english').value = '';
+    if (getEl('image-url')) getEl('image-url').value = '';
+    if (getEl('image-preview')) getEl('image-preview').innerHTML = '';
+    if (getEl('word-enabled')) getEl('word-enabled').checked = true;
   }
 
   function startEdit(id) {
     var w = words.find(function (x) { return x.id === id; });
     if (!w) return;
     editingId = id;
-    getEl('romaji').value = w.romaji || '';
-    getEl('kana-manual').value = w.kana || '';
-    getEl('english').value = w.english || '';
-    getEl('word-enabled').checked = w.enabled !== false;
-    getEl('image-url').value = w.image || '';
-    getEl('image-file').value = '';
+    if (getEl('romaji')) getEl('romaji').value = w.romaji || '';
+    if (getEl('kana-manual')) getEl('kana-manual').value = w.kana || '';
+    if (getEl('english')) getEl('english').value = w.english || '';
+    if (getEl('word-enabled')) getEl('word-enabled').checked = w.enabled !== false;
+    if (getEl('image-url')) getEl('image-url').value = w.image || '';
     var prev = getEl('image-preview');
-    prev.innerHTML = '';
-    if (w.image) {
+    if (prev) prev.innerHTML = '';
+    if (w.image && prev) {
       var img = document.createElement('img');
       img.src = w.image;
       img.alt = w.kana;
       prev.appendChild(img);
     }
-    getEl('kana-options').innerHTML = '';
-    var opt = document.createElement('option');
-    opt.value = w.kana;
-    opt.textContent = w.kana;
-    getEl('kana-options').appendChild(opt);
-    getEl('btn-cancel-edit').classList.remove('hidden');
+    var sel = getEl('kana-options');
+    if (sel) {
+      sel.innerHTML = '';
+      var opt = document.createElement('option');
+      opt.value = w.kana;
+      opt.textContent = w.kana;
+      sel.appendChild(opt);
+    }
+    if (getEl('btn-cancel-edit')) getEl('btn-cancel-edit').classList.remove('hidden');
   }
 
   function cancelEdit() {
     editingId = null;
-    getEl('btn-cancel-edit').classList.add('hidden');
+    if (getEl('btn-cancel-edit')) getEl('btn-cancel-edit').classList.add('hidden');
     clearForm();
   }
 
   function deleteWord(id) {
     if (!confirm('Delete this word?')) return;
-    var xhr = new XMLHttpRequest();
-    xhr.open('DELETE', '/api/words/' + id);
-    xhr.onload = function () {
+    if (!window.KanaDB) return;
+    window.KanaDB.words.delete(id).then(function () {
       loadWords();
       if (editingId === id) cancelEdit();
-    };
-    xhr.onerror = function () { alert('Failed to delete.'); };
-    xhr.send();
+    }).catch(function () { alert('Failed to delete.'); });
   }
 
-  getEl('btn-lookup').addEventListener('click', lookupKana);
+  if (getEl('btn-lookup')) getEl('btn-lookup').addEventListener('click', lookupKana);
 
-  getEl('romaji').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') { e.preventDefault(); lookupKana(); }
-  });
-
-  function setImageFromUrl(url) {
-    getEl('image-url').value = url;
-    var prev = getEl('image-preview');
-    prev.innerHTML = '';
-    if (url) {
-      var img = document.createElement('img');
-      img.src = url;
-      img.alt = 'preview';
-      prev.appendChild(img);
-    }
-  }
-
-  getEl('image-file').addEventListener('change', function () {
-    var file = this.files[0];
-    if (!file) return;
-    uploadImage(file, function (url) {
-      setImageFromUrl(url);
+  if (getEl('romaji')) {
+    getEl('romaji').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); lookupKana(); }
     });
-  });
-
-  function handlePaste(e) {
-    var items = e.clipboardData && e.clipboardData.items;
-    if (!items) return;
-    for (var i = 0; i < items.length; i++) {
-      if (items[i].type.indexOf('image') !== 0) continue;
-      var blob = items[i].getAsFile();
-      if (!blob) continue;
-      e.preventDefault();
-      var file = blob.name ? blob : new File([blob], 'pasted.png', { type: blob.type || 'image/png' });
-      uploadImage(file, function (url) {
-        if (url) setImageFromUrl(url);
-      });
-      return;
-    }
   }
 
-  document.addEventListener('paste', handlePaste);
+  if (getEl('btn-save')) getEl('btn-save').addEventListener('click', saveWord);
+  if (getEl('btn-cancel-edit')) getEl('btn-cancel-edit').addEventListener('click', cancelEdit);
+  if (getEl('word-search')) {
+    getEl('word-search').addEventListener('input', renderList);
+    getEl('word-search').addEventListener('change', renderList);
+  }
 
-  getEl('paste-zone').addEventListener('click', function () {
-    this.focus();
-  });
-
-  getEl('btn-save').addEventListener('click', function () {
-    var file = getEl('image-file').files[0];
-    if (file && !getEl('image-url').value) {
-      uploadImage(file, function (url) {
-        getEl('image-url').value = url;
-        saveWord();
-      });
-    } else {
-      saveWord();
-    }
-  });
-
-  getEl('btn-cancel-edit').addEventListener('click', cancelEdit);
-
-  getEl('word-search').addEventListener('input', renderList);
-  getEl('word-search').addEventListener('change', renderList);
-
-  loadWords();
+  if (window.KanaDB) {
+    window.KanaDB.open().then(function () { return window.KanaDB.migrateFromLocalStorage(); }).then(loadWords).catch(loadWords);
+  } else {
+    loadWords();
+  }
 })();

@@ -85,11 +85,15 @@ function romajiToHiragana(romaji) {
 // --- Routes ---
 
 app.get('/', function (req, res) {
-  res.sendFile(path.join(__dirname, 'public', 'game', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/game', function (req, res) {
+  res.redirect('/#game');
 });
 
 app.get('/editor', function (req, res) {
-  res.sendFile(path.join(__dirname, 'public', 'editor', 'index.html'));
+  res.redirect('/#editor');
 });
 
 app.get('/api/words', function (req, res) {

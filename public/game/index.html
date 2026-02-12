@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/game/style.css">
 </head>
 <body>
-  <a href="/editor" class="nav-link">Editor</a>
+  <a href="/#editor" class="nav-link" target="_parent">Editor</a>
 
   <div id="start-screen">
     <h1>Kana Shoot</h1>
@@ -77,6 +77,11 @@
     </div>
     <button id="btn-start">Start</button>
     <button type="button" id="btn-stats" class="btn-secondary btn-stats">Stats</button>
+    <button type="button" id="btn-sessions" class="btn-secondary">Sessions</button>
+    <div class="data-actions">
+      <button type="button" id="btn-export" class="btn-secondary">Export</button>
+      <button type="button" id="btn-import" class="btn-secondary">Import</button>
+    </div>
   </div>
 
   <div id="game-screen" class="hidden">
@@ -116,6 +121,36 @@
       <p class="modal-hint">Smart mode uses <strong>only characters from your stats</strong> (kana you’ve correctly typed in other modes), filtered by the Script you chose (Hiragana / Katakana / Both). It picks characters with <strong>low counts more often</strong> so you practice weak ones. Red = under 10 (need practice). List below is sorted lowest first and matches the current Script.</p>
       <div id="smart-info-list" class="stats-list"></div>
       <button type="button" id="smart-info-close" class="btn-primary">Close</button>
+    </div>
+  </div>
+
+  <div id="sessions-modal" class="modal hidden">
+    <div class="modal-backdrop sessions-modal-backdrop"></div>
+    <div class="modal-box">
+      <h2>Session history</h2>
+      <p class="modal-hint">Past games (Quit or Game over).</p>
+      <div class="stats-filters">
+        <label>Mode</label>
+        <select id="sessions-filter-mode">
+          <option value="all">All</option>
+          <option value="single">Single letter</option>
+          <option value="random">Random combo</option>
+          <option value="smart">Smart</option>
+          <option value="words">Words</option>
+          <option value="images">Images</option>
+          <option value="english">English</option>
+          <option value="kana-to-english">Kana to English</option>
+        </select>
+        <label>Sort</label>
+        <select id="sessions-sort">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="score-desc">Score (high first)</option>
+          <option value="score-asc">Score (low first)</option>
+        </select>
+      </div>
+      <div id="sessions-modal-list" class="sessions-list"></div>
+      <button type="button" id="sessions-modal-close" class="btn-primary">Close</button>
     </div>
   </div>
 
@@ -175,6 +210,48 @@
     </div>
   </div>
 
+  <div id="export-modal" class="modal hidden">
+    <div class="modal-backdrop export-modal-backdrop"></div>
+    <div class="modal-box">
+      <h2>Export data</h2>
+      <p class="modal-hint">Choose what to include. Default: words only.</p>
+      <div class="export-options">
+        <label class="opt-checkbox"><input type="checkbox" id="export-words" checked> Words</label>
+        <label class="opt-checkbox"><input type="checkbox" id="export-sessions"> Sessions</label>
+        <label class="opt-checkbox"><input type="checkbox" id="export-stats"> Character stats</label>
+        <label class="opt-checkbox"><input type="checkbox" id="export-profiles"> Character profiles</label>
+        <label class="opt-checkbox"><input type="checkbox" id="export-settings"> Settings</label>
+        <label class="opt-checkbox"><input type="checkbox" id="export-customChars"> Current custom chars</label>
+      </div>
+      <button type="button" id="export-download" class="btn-primary">Download JSON</button>
+      <button type="button" id="export-modal-close" class="btn-secondary">Cancel</button>
+    </div>
+  </div>
+
+  <div id="import-modal" class="modal hidden">
+    <div class="modal-backdrop import-modal-backdrop"></div>
+    <div class="modal-box">
+      <h2>Import data</h2>
+      <p class="modal-hint">Select a previously exported JSON file.</p>
+      <input type="file" id="import-file" accept=".json,application/json">
+      <div id="import-options" class="import-options hidden">
+        <p class="modal-hint">Choose what to import (from file):</p>
+        <label class="opt-checkbox"><input type="checkbox" id="import-words"> Words</label>
+        <label class="opt-checkbox"><input type="checkbox" id="import-sessions"> Sessions</label>
+        <label class="opt-checkbox"><input type="checkbox" id="import-stats"> Character stats</label>
+        <label class="opt-checkbox"><input type="checkbox" id="import-profiles"> Character profiles</label>
+        <label class="opt-checkbox"><input type="checkbox" id="import-settings"> Settings</label>
+        <label class="opt-checkbox"><input type="checkbox" id="import-customChars"> Current custom chars</label>
+        <span class="import-mode-wrap"><label class="opt-checkbox"><input type="radio" name="import-mode" value="replace" checked> Replace</label>
+        <label class="opt-checkbox"><input type="radio" name="import-mode" value="merge"> Merge</label></span>
+      </div>
+      <button type="button" id="import-do" class="btn-primary hidden">Import</button>
+      <button type="button" id="import-modal-close" class="btn-secondary">Close</button>
+    </div>
+  </div>
+
+  <script src="/db.js"></script>
+  <script src="/romaji-to-kana.js"></script>
   <script src="/game/script.js"></script>
 </body>
 </html>

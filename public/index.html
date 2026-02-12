@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kana Shoot</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: #1a1a1e; color: #ccc; }
+    .spa-nav { padding: 0.5rem 1rem; background: #25252a; border-bottom: 1px solid #444; display: flex; gap: 1rem; align-items: center; }
+    .spa-nav a { color: #8cf; text-decoration: none; }
+    .spa-nav a:hover { text-decoration: underline; }
+    #app-frame { display: block; width: 100%; height: calc(100vh - 40px); border: none; }
+  </style>
+</head>
+<body>
+  <nav class="spa-nav">
+    <a href="#game" id="nav-game">Game</a>
+    <a href="#editor" id="nav-editor">Editor</a>
+  </nav>
+  <iframe id="app-frame" title="App" src="game/index.html"></iframe>
+  <script>
+    (function () {
+      function setFrame() {
+        var hash = window.location.hash || '#game';
+        var frame = document.getElementById('app-frame');
+        frame.src = hash === '#editor' ? 'editor/index.html' : 'game/index.html';
+      }
+      window.addEventListener('hashchange', setFrame);
+      setFrame();
+    })();
+  </script>
+</body>
+</html>

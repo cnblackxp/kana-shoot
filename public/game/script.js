@@ -85,6 +85,10 @@
   var STATS_KEY = 'kanaShoot_romajiStats';
   var kanaPreviewTimer = null;
   var sessionStats = {};
+  var sessionSnapshot = null;
+
+  var storedStats = {};
+  var profileList = [];
 
   function saveSettings() {
     try {
@@ -101,15 +105,13 @@
       };
       var smartScript = document.getElementById('opt-smart-script');
       if (smartScript) o.smartScript = smartScript.value;
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(o));
+      if (window.KanaDB) window.KanaDB.settings.put(o).catch(function () {});
     } catch (e) {}
   }
 
-  function loadSettings() {
+  function loadSettingsFromStore(o) {
+    if (!o) return;
     try {
-      var raw = localStorage.getItem(SETTINGS_KEY);
-      if (!raw) return;
-      var o = JSON.parse(raw);
       var modeSel = document.getElementById('opt-mode-type');
       if (o.modeType) modeSel.value = o.modeType;
       toggleModeOptions();
@@ -130,7 +132,7 @@
       var smartScriptEl = document.getElementById('opt-smart-script');
       if (smartScriptEl && o.smartScript && [].slice.call(smartScriptEl.options).some(function (opt) { return opt.value === o.smartScript; })) smartScriptEl.value = o.smartScript;
       var btn = document.getElementById('btn-custom-chars');
-      if (sel.value === 'custom') btn.classList.remove('hidden');
+      if (sel && sel.value === 'custom') btn.classList.remove('hidden');
       document.getElementById('zen-label').style.visibility = spawnSel.value === 'zen' ? 'visible' : 'hidden';
     } catch (e) {}
   }
@@ -148,35 +150,19 @@
   }
 
   function saveCustomChars() {
-    try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(customPool)); } catch (e) {}
+    if (window.KanaDB) window.KanaDB.customChars.put(customPool).catch(function () {});
   }
 
   function loadCustomChars() {
-    try {
-      var raw = localStorage.getItem(CUSTOM_KEY);
-      if (!raw) return;
-      var arr = JSON.parse(raw);
+    if (!window.KanaDB) return Promise.resolve();
+    return window.KanaDB.customChars.get().then(function (arr) {
       if (Array.isArray(arr) && arr.length > 0) customPool = arr;
-    } catch (e) {}
+    });
   }
 
-  function getProfiles() {
-    try {
-      var raw = localStorage.getItem(PROFILES_KEY);
-      if (!raw) return [];
-      var arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : [];
-    } catch (e) { return []; }
-  }
-
-  function saveProfiles(profiles) {
-    try { localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles)); } catch (e) {}
-  }
-
-  function getNextDefaultName() {
-    var profiles = getProfiles();
+  function getNextDefaultNameFromList(profiles) {
     var n = 1;
-    for (var i = 0; i < profiles.length; i++) {
+    for (var i = 0; i < (profiles || []).length; i++) {
       var m = /^Set (\d+)$/i.exec(profiles[i].name);
       if (m) n = Math.max(n, parseInt(m[1], 10) + 1);
     }
@@ -192,7 +178,7 @@
     opt0.value = '';
     opt0.textContent = '— Select profile —';
     sel.appendChild(opt0);
-    getProfiles().forEach(function (p) {
+    (profileList || []).forEach(function (p) {
       var opt = document.createElement('option');
       opt.value = p.id;
       opt.textContent = p.name;
@@ -398,14 +384,12 @@
   }
 
   function getStoredStats() {
-    try {
-      var raw = localStorage.getItem(STATS_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) { return {}; }
+    return storedStats;
   }
 
   function saveStoredStats(stats) {
-    try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch (e) {}
+    storedStats = stats || {};
+    if (window.KanaDB) window.KanaDB.stats.put(storedStats).catch(function () {});
   }
 
   function getRomajiForKana(kanaChar) {
@@ -556,8 +540,30 @@
     animationId = requestAnimationFrame(tick);
   }
 
+  function saveSession() {
+    if (!sessionSnapshot || !window.KanaDB) return;
+    var record = {
+      id: 's' + Date.now(),
+      endedAt: sessionSnapshot.endedAt || Date.now(),
+      score: score,
+      gameMode: sessionSnapshot.gameMode,
+      characterSet: sessionSnapshot.characterSet,
+      spawn: sessionSnapshot.spawn,
+      interval: sessionSnapshot.interval,
+      fallSpeed: sessionSnapshot.fallSpeed,
+      lives: sessionSnapshot.lives,
+      wordMin: sessionSnapshot.wordMin,
+      wordMax: sessionSnapshot.wordMax,
+      smartScript: sessionSnapshot.smartScript
+    };
+    window.KanaDB.sessions.add(record).catch(function () {});
+    sessionSnapshot = null;
+  }
+
   function gameOver() {
     if (!gameRunning) return;
+    if (sessionSnapshot) sessionSnapshot.endedAt = Date.now();
+    saveSession();
     gameRunning = false;
     if (spawnTimer) { clearTimeout(spawnTimer); spawnTimer = null; }
     if (animationId != null) { cancelAnimationFrame(animationId); animationId = null; }
@@ -566,6 +572,8 @@
   }
 
   function quitGame() {
+    if (sessionSnapshot) sessionSnapshot.endedAt = Date.now();
+    saveSession();
     gameRunning = false;
     if (spawnTimer) { clearTimeout(spawnTimer); spawnTimer = null; }
     if (animationId != null) { cancelAnimationFrame(animationId); animationId = null; }
@@ -742,7 +750,7 @@
       }
     } else {
       if (cmsWords.length === 0) {
-        alert('No words in the list for this mode. Add entries with kana and English in the Editor (/editor).');
+        alert('No words in the list for this mode. Add entries in the Editor (Editor tab).');
         return;
       }
     }
@@ -787,6 +795,17 @@
       }
     }
     sessionStats = {};
+    sessionSnapshot = {
+      gameMode: gameMode,
+      characterSet: document.getElementById('opt-characters').value,
+      spawn: document.getElementById('opt-spawn').value,
+      interval: parseFloat(document.getElementById('opt-interval').value) || 1,
+      fallSpeed: FALL_SPEED,
+      lives: lives,
+      wordMin: wordMin,
+      wordMax: wordMax,
+      smartScript: gameMode === 'smart' && document.getElementById('opt-smart-script') ? document.getElementById('opt-smart-script').value : null
+    };
     updateRomajiSidebar();
     inputEl.focus();
     scheduleSpawn();
@@ -803,28 +822,20 @@
       if (cb) cb();
       return;
     }
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', '/api/words');
-    xhr.onload = function () {
-      try {
-        var list = JSON.parse(xhr.responseText);
-        var enabledOnly = list.filter(function (w) { return w.enabled !== false; });
-        if (mode === 'words') {
-          cmsWords = enabledOnly.filter(function (w) { return w.kana; });
-        } else if (mode === 'images') {
-          cmsWords = enabledOnly.filter(function (w) { return w.kana && w.image && String(w.image).trim() !== ''; });
-        } else if (mode === 'english' || mode === 'kana-to-english') {
-          cmsWords = enabledOnly.filter(function (w) { return w.kana && w.english && parseEnglishList(w.english).length > 0; });
-        } else {
-          cmsWords = [];
-        }
-      } catch (e) {
+    if (!window.KanaDB) { cmsWords = []; if (cb) cb(); return; }
+    window.KanaDB.words.getAll().then(function (list) {
+      var enabledOnly = (list || []).filter(function (w) { return w.enabled !== false; });
+      if (mode === 'words') {
+        cmsWords = enabledOnly.filter(function (w) { return w.kana; });
+      } else if (mode === 'images') {
+        cmsWords = enabledOnly.filter(function (w) { return w.kana && w.image && String(w.image).trim() !== ''; });
+      } else if (mode === 'english' || mode === 'kana-to-english') {
+        cmsWords = enabledOnly.filter(function (w) { return w.kana && w.english && parseEnglishList(w.english).length > 0; });
+      } else {
         cmsWords = [];
       }
       if (cb) cb();
-    };
-    xhr.onerror = function () { cmsWords = []; if (cb) cb(); };
-    xhr.send();
+    }).catch(function () { cmsWords = []; if (cb) cb(); });
   }
 
   function init() {
@@ -836,9 +847,26 @@
     livesEl = document.getElementById('lives-display');
     multiplierEl = document.getElementById('multiplier');
 
-    loadCustomChars();
-    buildCustomModal();
-    loadSettings();
+    var ready = window.KanaDB
+      ? window.KanaDB.open().then(function () { return window.KanaDB.migrateFromLocalStorage(); })
+      : Promise.resolve();
+    ready.then(function () {
+      return loadCustomChars();
+    }).then(function () {
+      buildCustomModal();
+      return window.KanaDB ? window.KanaDB.settings.get() : null;
+    }).then(function (o) {
+      loadSettingsFromStore(o);
+      return window.KanaDB ? window.KanaDB.stats.get() : null;
+    }).then(function (s) {
+      if (s && typeof s === 'object') storedStats = s;
+      attachListeners();
+    }).catch(function () {
+      attachListeners();
+    });
+  }
+
+  function attachListeners() {
 
     document.getElementById('opt-mode-type').addEventListener('change', function () {
       toggleModeOptions();
@@ -850,6 +878,41 @@
     });
 
     document.getElementById('btn-quit').addEventListener('click', quitGame);
+
+  function renderSessionsModalList() {
+    var listEl = document.getElementById('sessions-modal-list');
+    var filterMode = document.getElementById('sessions-filter-mode');
+    var sortOrder = document.getElementById('sessions-sort');
+    if (!listEl || !window.KanaDB) return;
+    window.KanaDB.sessions.getAll().then(function (sessions) {
+      var list = sessions || [];
+      if (filterMode && filterMode.value !== 'all') {
+        list = list.filter(function (s) { return s.gameMode === filterMode.value; });
+      }
+      var sort = sortOrder ? sortOrder.value : 'newest';
+      list.sort(function (a, b) {
+        if (sort === 'oldest') return (a.endedAt || 0) - (b.endedAt || 0);
+        if (sort === 'newest') return (b.endedAt || 0) - (a.endedAt || 0);
+        if (sort === 'score-desc') return (b.score || 0) - (a.score || 0);
+        if (sort === 'score-asc') return (a.score || 0) - (b.score || 0);
+        return (b.endedAt || 0) - (a.endedAt || 0);
+      });
+      listEl.innerHTML = '';
+      if (list.length === 0) {
+        listEl.innerHTML = '<p class="modal-hint">No sessions yet. Quit or finish a game to record one.</p>';
+        return;
+      }
+      var modeLabels = { single: 'Single', random: 'Random', smart: 'Smart', words: 'Words', images: 'Images', english: 'English', 'kana-to-english': 'Kana→En' };
+      list.forEach(function (s) {
+        var row = document.createElement('div');
+        row.className = 'session-row';
+        var date = new Date(s.endedAt || 0);
+        var dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        row.innerHTML = '<span class="session-date">' + dateStr + '</span><span class="session-mode">' + (modeLabels[s.gameMode] || s.gameMode) + ' · ' + (s.characterSet || '') + (s.spawn === 'zen' ? ' · Zen ' + s.interval + 's' : ' · Ramp') + '</span><span class="session-score">' + (s.score || 0) + '</span>';
+        listEl.appendChild(row);
+      });
+    });
+  }
 
   function renderStatsModalList() {
     var listEl = document.getElementById('stats-modal-list');
@@ -934,6 +997,19 @@
       document.getElementById('stats-modal').classList.add('hidden');
     });
 
+    document.getElementById('btn-sessions').addEventListener('click', function () {
+      renderSessionsModalList();
+      document.getElementById('sessions-modal').classList.remove('hidden');
+    });
+    document.getElementById('sessions-modal-close').addEventListener('click', function () {
+      document.getElementById('sessions-modal').classList.add('hidden');
+    });
+    document.querySelector('.sessions-modal-backdrop').addEventListener('click', function () {
+      document.getElementById('sessions-modal').classList.add('hidden');
+    });
+    document.getElementById('sessions-filter-mode').addEventListener('change', renderSessionsModalList);
+    document.getElementById('sessions-sort').addEventListener('change', renderSessionsModalList);
+
     document.getElementById('opt-characters').addEventListener('change', function () {
       var btn = document.getElementById('btn-custom-chars');
       if (this.value === 'custom') btn.classList.remove('hidden');
@@ -942,8 +1018,16 @@
     });
     document.getElementById('btn-custom-chars').addEventListener('click', function () {
       applyCustomPoolToModal();
-      refreshProfileDropdown();
-      document.getElementById('custom-modal').classList.remove('hidden');
+      if (window.KanaDB) {
+        window.KanaDB.profiles.getAll().then(function (list) {
+          profileList = list || [];
+          refreshProfileDropdown();
+          document.getElementById('custom-modal').classList.remove('hidden');
+        });
+      } else {
+        refreshProfileDropdown();
+        document.getElementById('custom-modal').classList.remove('hidden');
+      }
     });
     document.getElementById('custom-done').addEventListener('click', function () {
       customPool = getCustomSelected();
@@ -987,43 +1071,187 @@
       var sel = document.getElementById('custom-profile-list');
       var id = sel && sel.value;
       if (!id) return;
-      var profiles = getProfiles();
-      var p = profiles.filter(function (x) { return x.id === id; })[0];
+      var p = (profileList || []).filter(function (x) { return x.id === id; })[0];
       if (p && p.chars) applyProfileToModal(p.chars);
     });
     document.getElementById('custom-profile-save').addEventListener('click', function () {
       var chars = getCustomSelected();
       if (chars.length === 0) return;
-      var profiles = getProfiles();
-      var name = getNextDefaultName();
+      var name = getNextDefaultNameFromList(profileList);
       var id = 'p' + Date.now();
-      profiles.push({ id: id, name: name, chars: chars });
-      saveProfiles(profiles);
-      refreshProfileDropdown();
-      document.getElementById('custom-profile-list').value = id;
+      var profile = { id: id, name: name, chars: chars };
+      if (!window.KanaDB) return;
+      window.KanaDB.profiles.put(profile).then(function () {
+        return window.KanaDB.profiles.getAll();
+      }).then(function (list) {
+        profileList = list || [];
+        refreshProfileDropdown();
+        document.getElementById('custom-profile-list').value = id;
+      });
     });
     document.getElementById('custom-profile-rename').addEventListener('click', function () {
       var sel = document.getElementById('custom-profile-list');
       var id = sel && sel.value;
       if (!id) return;
-      var profiles = getProfiles();
-      var p = profiles.filter(function (x) { return x.id === id; })[0];
+      var p = (profileList || []).filter(function (x) { return x.id === id; })[0];
       if (!p) return;
       var newName = window.prompt('Profile name:', p.name);
       if (newName == null || String(newName).trim() === '') return;
       p.name = String(newName).trim();
-      saveProfiles(profiles);
-      refreshProfileDropdown();
-      sel.value = id;
+      if (!window.KanaDB) return;
+      window.KanaDB.profiles.put(p).then(function () {
+        return window.KanaDB.profiles.getAll();
+      }).then(function (list) {
+        profileList = list || [];
+        refreshProfileDropdown();
+        sel.value = id;
+      });
     });
     document.getElementById('custom-profile-delete').addEventListener('click', function () {
       var sel = document.getElementById('custom-profile-list');
       var id = sel && sel.value;
       if (!id) return;
-      var profiles = getProfiles().filter(function (x) { return x.id !== id; });
-      saveProfiles(profiles);
-      refreshProfileDropdown();
+      if (!window.KanaDB) return;
+      window.KanaDB.profiles.delete(id).then(function () {
+        return window.KanaDB.profiles.getAll();
+      }).then(function (list) {
+        profileList = list || [];
+        refreshProfileDropdown();
+      });
     });
+
+    document.getElementById('btn-export').addEventListener('click', function () {
+      document.getElementById('export-modal').classList.remove('hidden');
+    });
+    document.getElementById('export-modal-close').addEventListener('click', function () {
+      document.getElementById('export-modal').classList.add('hidden');
+    });
+    document.querySelector('.export-modal-backdrop').addEventListener('click', function () {
+      document.getElementById('export-modal').classList.add('hidden');
+    });
+    document.getElementById('export-download').addEventListener('click', function () {
+      if (!window.KanaDB) return;
+      var payload = { version: 1, exportedAt: Date.now() };
+      var add = function (key, p) { payload[key] = p; };
+      var done = function () {
+        var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'kana-shoot-export-' + Date.now() + '.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        document.getElementById('export-modal').classList.add('hidden');
+      };
+      var next = [];
+      if (document.getElementById('export-words').checked) next.push(window.KanaDB.words.getAll().then(add.bind(null, 'words')));
+      if (document.getElementById('export-sessions').checked) next.push(window.KanaDB.sessions.getAll().then(add.bind(null, 'sessions')));
+      if (document.getElementById('export-stats').checked) next.push(window.KanaDB.stats.get().then(add.bind(null, 'stats')));
+      if (document.getElementById('export-profiles').checked) next.push(window.KanaDB.profiles.getAll().then(add.bind(null, 'profiles')));
+      if (document.getElementById('export-settings').checked) next.push(window.KanaDB.settings.get().then(add.bind(null, 'settings')));
+      if (document.getElementById('export-customChars').checked) next.push(window.KanaDB.customChars.get().then(add.bind(null, 'customChars')));
+      Promise.all(next).then(done).catch(done);
+    });
+
+    document.getElementById('btn-import').addEventListener('click', function () {
+      document.getElementById('import-modal').classList.remove('hidden');
+      document.getElementById('import-file').value = '';
+      document.getElementById('import-options').classList.add('hidden');
+      document.getElementById('import-do').classList.add('hidden');
+    });
+    document.getElementById('import-modal-close').addEventListener('click', function () {
+      document.getElementById('import-modal').classList.add('hidden');
+    });
+    document.querySelector('.import-modal-backdrop').addEventListener('click', function () {
+      document.getElementById('import-modal').classList.add('hidden');
+    });
+    document.getElementById('import-file').addEventListener('change', function () {
+      var file = this.files[0];
+      var opts = document.getElementById('import-options');
+      var btn = document.getElementById('import-do');
+      if (!file) { opts.classList.add('hidden'); btn.classList.add('hidden'); return; }
+      var fr = new FileReader();
+      fr.onload = function () {
+        try {
+          var data = JSON.parse(fr.result);
+          opts.classList.remove('hidden');
+          ['words', 'sessions', 'stats', 'profiles', 'settings', 'customChars'].forEach(function (k) {
+            var cb = document.getElementById('import-' + k);
+            if (cb) { cb.checked = !!data[k]; cb.disabled = !data[k]; }
+          });
+          btn.classList.remove('hidden');
+          btn.dataset.importPayload = fr.result;
+        } catch (e) {
+          alert('Invalid JSON file.');
+        }
+      };
+      fr.readAsText(file);
+    });
+    document.getElementById('import-do').addEventListener('click', function () {
+      var raw = this.dataset.importPayload;
+      if (!raw || !window.KanaDB) return;
+      try {
+        var data = JSON.parse(raw);
+        var replace = document.querySelector('input[name="import-mode"]:checked').value === 'replace';
+        var run = [];
+        if (document.getElementById('import-words').checked && data.words && Array.isArray(data.words)) {
+          var validWords = data.words.filter(function (w) { return w && w.id != null && String(w.romaji).trim() && String(w.kana).trim(); });
+          if (replace) {
+            run.push(window.KanaDB.words.getAll().then(function (existing) {
+              return Promise.all(existing.map(function (w) { return window.KanaDB.words.delete(w.id); }));
+            }).then(function () {
+              return Promise.all(validWords.map(function (w) { return window.KanaDB.words.put(w); }));
+            }));
+          } else {
+            run.push(Promise.all(validWords.map(function (w) { return window.KanaDB.words.put(w); })));
+          }
+        }
+        if (document.getElementById('import-sessions').checked && data.sessions && Array.isArray(data.sessions)) {
+          if (replace) {
+            run.push(window.KanaDB.sessions.getAll().then(function (existing) {
+              return Promise.all(existing.map(function (s) { return window.KanaDB.sessions.delete(s.id); }));
+            }).then(function () {
+              return Promise.all(data.sessions.map(function (s) { return window.KanaDB.sessions.add(s); }));
+            }));
+          } else {
+            run.push(Promise.all(data.sessions.map(function (s) { return window.KanaDB.sessions.add(s); })));
+          }
+        }
+        if (document.getElementById('import-stats').checked && data.stats && typeof data.stats === 'object') {
+          if (replace) run.push(window.KanaDB.stats.put(data.stats));
+          else run.push(window.KanaDB.stats.get().then(function (cur) {
+            var merged = Object.assign({}, cur || {});
+            Object.keys(data.stats).forEach(function (k) { merged[k] = (merged[k] || 0) + (data.stats[k] || 0); });
+            return window.KanaDB.stats.put(merged);
+          }));
+        }
+        if (document.getElementById('import-profiles').checked && data.profiles && Array.isArray(data.profiles)) {
+          if (replace) {
+            run.push(window.KanaDB.profiles.getAll().then(function (existing) {
+              return Promise.all(existing.map(function (p) { return window.KanaDB.profiles.delete(p.id); }));
+            }).then(function () {
+              return Promise.all(data.profiles.map(function (p) { return window.KanaDB.profiles.put(p); }));
+            }));
+          } else {
+            run.push(Promise.all(data.profiles.map(function (p) { return window.KanaDB.profiles.put(p); })));
+          }
+        }
+        if (document.getElementById('import-settings').checked && data.settings) {
+          run.push(window.KanaDB.settings.put(data.settings).then(function () { loadSettingsFromStore(data.settings); }));
+        }
+        if (document.getElementById('import-customChars').checked && data.customChars && Array.isArray(data.customChars)) {
+          run.push(window.KanaDB.customChars.put(data.customChars).then(function () { customPool = data.customChars; }));
+        }
+        Promise.all(run).then(function () {
+          document.getElementById('import-modal').classList.add('hidden');
+          if (document.getElementById('import-customChars').checked) { customPool = data.customChars || []; applyCustomPoolToModal(); }
+          var refresh = [];
+          if (document.getElementById('import-stats').checked) refresh.push(window.KanaDB.stats.get().then(function (s) { storedStats = s || {}; }));
+          if (document.getElementById('import-profiles').checked) refresh.push(window.KanaDB.profiles.getAll().then(function (l) { profileList = l || []; }));
+          return Promise.all(refresh);
+        }).then(function () { alert('Import done.'); }).catch(function (e) { alert('Import failed: ' + (e && e.message)); });
+      } catch (e) { alert('Invalid data: ' + (e && e.message)); }
+    });
+
     document.getElementById('opt-spawn').addEventListener('change', function () {
       document.getElementById('zen-label').style.visibility = this.value === 'zen' ? 'visible' : 'hidden';
       saveSettings();
@@ -1062,18 +1290,8 @@
       if (kanaPreviewTimer) clearTimeout(kanaPreviewTimer);
       kanaPreviewTimer = setTimeout(function () {
         kanaPreviewTimer = null;
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', '/api/romaji-to-kana?q=' + encodeURIComponent(val));
-        xhr.onload = function () {
-          try {
-            var arr = JSON.parse(xhr.responseText);
-            kanaPrev.textContent = arr && arr[0] ? arr[0] : '';
-          } catch (e) {
-            kanaPrev.textContent = '';
-          }
-        };
-        xhr.onerror = function () { kanaPrev.textContent = ''; };
-        xhr.send();
+        var kana = (typeof window.romajiToHiragana === 'function') ? window.romajiToHiragana(val) : '';
+        kanaPrev.textContent = kana || '';
       }, 120);
     });
 

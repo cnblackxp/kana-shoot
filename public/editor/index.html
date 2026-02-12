@@ -10,7 +10,7 @@
   <div class="editor">
     <h1>Content editor</h1>
     <p class="hint">Add words for the game (Words, Images, English modes). Romaji → pick kana, optional image and English.</p>
-    <a href="/" class="nav-link">Back to game</a>
+    <a href="/#game" class="nav-link" target="_parent">Back to game</a>
 
     <div class="form-section">
       <h2>Add word</h2>
@@ -35,15 +35,10 @@
         </label>
       </div>
       <div class="form-row">
-        <label>Image (optional)</label>
-        <input type="file" id="image-file" accept="image/*">
+        <label>Image URL (optional, for future use)</label>
+        <input type="text" id="image-url" placeholder="Leave empty or paste URL" value="">
         <span class="img-preview" id="image-preview"></span>
       </div>
-      <div class="form-row">
-        <label>Or paste image</label>
-        <div id="paste-zone" class="paste-zone" tabindex="0">Click here then paste (Ctrl+V) to add an image</div>
-      </div>
-      <input type="hidden" id="image-url" value="">
       <button type="button" id="btn-save" class="btn-primary">Save word</button>
       <button type="button" id="btn-cancel-edit" class="btn-secondary hidden">Cancel edit</button>
     </div>
@@ -55,6 +50,8 @@
     </div>
   </div>
 
+  <script src="/db.js"></script>
+  <script src="/romaji-to-kana.js"></script>
   <script src="/editor/script.js"></script>
 </body>
 </html>
