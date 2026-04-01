@@ -237,5 +237,229 @@
     "image": "/api/images/79b01fc63fa2424b7d110393b66bfff1.png",
     "english": "cold",
     "enabled": true
+  },
+  {
+    "id": "1771026487975",
+    "romaji": "nezumi",
+    "kana": "ねずみ",
+    "image": "",
+    "english": "mouse",
+    "enabled": true
+  },
+  {
+    "id": "1771026496363",
+    "romaji": "uma",
+    "kana": "うま",
+    "image": "",
+    "english": "horse",
+    "enabled": true
+  },
+  {
+    "id": "1771026504178",
+    "romaji": "buta",
+    "kana": "ぶた",
+    "image": "",
+    "english": "pig",
+    "enabled": true
+  },
+  {
+    "id": "1771026520245",
+    "romaji": "hitsuji",
+    "kana": "ひつじ",
+    "image": "",
+    "english": "sheep",
+    "enabled": true
+  },
+  {
+    "id": "1771026547453",
+    "romaji": "inseki",
+    "kana": "いんせき",
+    "image": "",
+    "english": "meteor",
+    "enabled": true
+  },
+  {
+    "id": "1771026557630",
+    "romaji": "mite",
+    "kana": "みて",
+    "image": "",
+    "english": "look",
+    "enabled": true
+  },
+  {
+    "id": "1771026566842",
+    "romaji": "ashita",
+    "kana": "あした",
+    "image": "",
+    "english": "tomorrow",
+    "enabled": true
+  },
+  {
+    "id": "1771026577681",
+    "romaji": "mata",
+    "kana": "また",
+    "image": "",
+    "english": "again",
+    "enabled": true
+  },
+  {
+    "id": "1771026620158",
+    "romaji": "yagi",
+    "kana": "やぎ",
+    "image": "",
+    "english": "goat",
+    "enabled": true
+  },
+  {
+    "id": "1771026645127",
+    "romaji": "zannen",
+    "kana": "ざんねん",
+    "image": "",
+    "english": "unfortunate, too bad",
+    "enabled": true
+  },
+  {
+    "id": "1771026656219",
+    "romaji": "mada",
+    "kana": "まだ",
+    "image": "",
+    "english": "yet, still",
+    "enabled": true
+  },
+  {
+    "id": "1771026920777",
+    "romaji": "fune",
+    "kana": "ふね",
+    "image": "",
+    "english": "boat, ship",
+    "enabled": true
+  },
+  {
+    "id": "1771026946753",
+    "romaji": "hayaku",
+    "kana": "はやく",
+    "image": "",
+    "english": "hurry, fast, quickly",
+    "enabled": true
+  },
+  {
+    "id": "1771026963385",
+    "romaji": "muri",
+    "kana": "むり",
+    "image": "",
+    "english": "impossible, no way",
+    "enabled": true
+  },
+  {
+    "id": "1771026993558",
+    "romaji": "maji",
+    "kana": "まじ",
+    "image": "",
+    "english": "serious",
+    "enabled": true
+  },
+  {
+    "id": "1771027020612",
+    "romaji": "hidoi",
+    "kana": "ひどい",
+    "image": "",
+    "english": "awful, cruel, harsh",
+    "enabled": true
+  },
+  {
+    "id": "1771027029708",
+    "romaji": "atsui",
+    "kana": "あつい",
+    "image": "",
+    "english": "hot",
+    "enabled": true
+  },
+  {
+    "id": "1771027053183",
+    "romaji": "doushite",
+    "kana": "どうして",
+    "image": "",
+    "english": "why",
+    "enabled": true
+  },
+  {
+    "id": "1771027061134",
+    "romaji": "nani",
+    "kana": "なに",
+    "image": "",
+    "english": "what",
+    "enabled": true
+  },
+  {
+    "id": "1771027070135",
+    "romaji": "nande",
+    "kana": "なんで",
+    "image": "",
+    "english": "why",
+    "enabled": true
+  },
+  {
+    "id": "1771027096253",
+    "romaji": "douzo",
+    "kana": "どうぞ",
+    "image": "",
+    "english": "please, go ahead",
+    "enabled": true
+  },
+  {
+    "id": "1771027108587",
+    "romaji": "mochiron",
+    "kana": "もちろん",
+    "image": "",
+    "english": "of course",
+    "enabled": true
+  },
+  {
+    "id": "1771027513773",
+    "romaji": "dare",
+    "kana": "だれ",
+    "image": "",
+    "english": "who",
+    "enabled": true
+  },
+  {
+    "id": "1771027525307",
+    "romaji": "itsu",
+    "kana": "いつ",
+    "image": "",
+    "english": "when",
+    "enabled": true
+  },
+  {
+    "id": "1771027555544",
+    "romaji": "doko",
+    "kana": "どこ",
+    "image": "",
+    "english": "where",
+    "enabled": true
+  },
+  {
+    "id": "1771027564303",
+    "romaji": "kore",
+    "kana": "これ",
+    "image": "",
+    "english": "this",
+    "enabled": true
+  },
+  {
+    "id": "1771027569290",
+    "romaji": "sore",
+    "kana": "それ",
+    "image": "",
+    "english": "that",
+    "enabled": true
+  },
+  {
+    "id": "1771027584762",
+    "romaji": "dou",
+    "kana": "どう",
+    "image": "",
+    "english": "how",
+    "enabled": true
   }
 ]
